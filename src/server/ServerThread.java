@@ -2,6 +2,7 @@ package server;
 
 import database.DBConnection;
 import model.Message;
+import model.Type;
 import model.User;
 
 import java.io.*;
@@ -19,12 +20,18 @@ public class ServerThread implements Runnable{
     private static final String USER_LOGIN = "SELECT * FROM user WHERE name = ? and password = ?";
     private static final String GET_USER_BY_USERNAME = "SELECT * FROM user WHERE name = ?";
     private final Socket clientSocket;
-    public ServerThread(Socket accept) {
+    private final ObjectInputStream input;
+    private final ObjectOutputStream output;
+
+    public ServerThread(Socket accept) throws IOException {
         this.clientSocket = accept;
-        addInstance();
+        User user = new User();
+        this.input = new ObjectInputStream(accept.getInputStream());
+        this.output = new ObjectOutputStream(accept.getOutputStream());
+        this.addInstance();
     }
     private static  String handleEcho(String msgToHandle){
-        String regex = "[^0-9a-zA-Z]";
+        String regex = "[ ](?=[ ])|[^-_,A-Za-z0-9 ]+";
         msgToHandle = msgToHandle.replaceAll(regex,"");
         return msgToHandle;
 
@@ -83,73 +90,74 @@ public class ServerThread implements Runnable{
     public void run() {
         try
         {
-            InputStream  inputStream = clientSocket.getInputStream();
-            OutputStream outputStream = clientSocket.getOutputStream();
-            ObjectInputStream input = new ObjectInputStream(inputStream);
-            ObjectOutputStream output = new ObjectOutputStream(outputStream);
-            Message message = new Message();
+
+            Message message;
 
             while (true){
-                String action = input.readUTF();
-                System.out.println("g");
+                message = (Message) input.readObject();
+
+                Type action = message.getMsgType();
                 System.out.println("Client option: " + action);
-                if(action.equalsIgnoreCase("exit")){
+                if(action == Type.EXIT){
                     System.out.println("client: " + clientSocket.getLocalAddress().toString()
                                         + " exit");
                 }
                 switch (action){
-                    case "login" ->{
-                        User user = (User) input.readObject();
+                    case LOGIN ->{
+                        User user = message.getUser();
                         User existedUser = checkLogin(user);
                         if(existedUser !=null){
                             System.out.println("login successfully!");
                             message.setMessage("Login succeed");
-//                            output.writeUTF("Login succeed!");
                             output.writeObject(message);
                             output.flush();
                         }else {
                             System.out.println("failed to login");
-//                            output.writeUTF("Wrong username or password");
                             message.setMessage("fail");
                             output.writeObject(message);
                             output.flush();
                         }
                     }
 
-                    case "register" ->{
-                        message = (Message) input.readObject();
+                    case REGISTER ->{
                         User user = message.getUser();
                         User isUserExisted = isUserExisted(user);
                         if(isUserExisted == null){
                             boolean isCreated = createUser(user);
                             if(isCreated){
                                 System.out.println("Initialize use successfully!");
-                                output.writeUTF("success");
+                                message.setMessage("success");
+                                output.writeObject(message);
                                 output.flush();
                             } else {
                                 System.out.println("Failed to creat user!");
-                                output.writeUTF("fail");
+                                message.setMessage("fail");
+                                output.writeObject(message);
                                 output.flush();
                             }
                         } else {
-                            output.writeUTF("Username already existed");
+                            System.out.println("Username already existed: " +
+                                                user.getUserName());
+                            message.setMessage("Username already existed");
+                            output.writeObject(message);
                             output.flush();
                         }
                     }
 
-                    case "echo" -> {
+                    case ECHO -> {
                         while (true) {
-                            message = (Message) input.readObject();
-                            if (message.getMessage().equalsIgnoreCase("exit")) {
+                            String msgToEcho = message.getMessage();
+                            if (msgToEcho.equalsIgnoreCase("exit")) {
                                 removeInstance();
                                 System.out.println("disconnect.");
                                 break;
                             }
-                            System.out.println("Message: " + message);
-                            message.setMessage(handleEcho(message.getMessage()));
+                            System.out.println("Message: " + msgToEcho);
+                            message.setMessage(handleEcho(msgToEcho));
                             output.writeObject(message);
                             output.flush();
 
+                            message = (Message) input.readObject();
                         }
 
                     }

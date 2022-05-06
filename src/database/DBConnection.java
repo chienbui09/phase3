@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class DBConnection implements AutoCloseable {
     private static final String DB_URL = "jdbc:mysql://172.18.0.1:3306/tcp?allowPublicKeyRetrieval=true&useSSL=false";
     private static final String USER_NAME = "root";
-    private static final String PASSWORD = "java123";
+    private static final String PASSWORD = "12345678";
     private static final String DRIVER = "com.mysql.cj.jdbc.Driver";
     private Connection conn = null;
 

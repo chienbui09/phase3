@@ -2,6 +2,8 @@ package client;
 
 import model.Message;
 
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -13,6 +15,8 @@ public class Client {
         Socket clientSocket;
         Scanner scanner = new Scanner(System.in);
         Message clientMsg = new Message();
+        ObjectOutputStream outputStream;
+        ObjectInputStream inputStream;
         // start
         System.out.println("start");
 
@@ -22,13 +26,17 @@ public class Client {
             System.out.println("connected");
 
             // declare receiving & sending thread
-            Recvhandle recvhandle = new Recvhandle(clientSocket, clientMsg);
-            SendingHandle sendingHandle = new SendingHandle(clientSocket,clientMsg, scanner);
+            outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
+            inputStream = new ObjectInputStream(clientSocket.getInputStream());
 
+            SendingHandle sendingHandle = new SendingHandle(scanner, clientSocket, outputStream);
             Thread sender = new Thread(sendingHandle);
             sender.start();
+
+            Recvhandle recvhandle = new Recvhandle(clientSocket, inputStream);
             Thread receiver = new Thread(recvhandle);
             receiver.start();
+
         } catch (Exception e){
             System.err.println("unable to connect to server");
             e.printStackTrace();
