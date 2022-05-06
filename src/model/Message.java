@@ -24,6 +24,10 @@ public class Message implements Serializable {
         this.user = user;
         this.msgType = msgType;
     }
+    public Message(Type msgType, String message){
+        this.msgType = msgType;
+        this.message = message;
+    }
 
     //Getter & Setter
 
@@ -51,29 +55,4 @@ public class Message implements Serializable {
         this.message = message;
     }
 
-    // state of handling
-
-    public boolean isConnected(){
-        return this.connected;
-    }
-
-    public boolean isRegister(){
-        return this.registed;
-    }
-
-    public boolean isLogin(){
-        return this.logedin;
-    }
-
-    public void setConnected(boolean connected) {
-        this.connected = connected;
-    }
-
-    public void setRegisted(boolean registed) {
-        this.registed = registed;
-    }
-
-    public void setLogedin(boolean logedin) {
-        this.logedin = logedin;
-    }
 }

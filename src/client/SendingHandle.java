@@ -2,6 +2,7 @@ package client;
 
 import model.Message;
 import model.Type;
+import model.User;
 
 import java.io.ObjectOutputStream;
 import java.net.Socket;
@@ -10,32 +11,20 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SendingHandle implements Runnable{
-    Socket socket;
-    Message clientMsg;
-    Type msgType;
-    Scanner scanner;
-    String username;
-    String password;
-    String message;
-
-    int selector;
+    private Message clientMsg;
+    private final Scanner scanner;
+    private final ObjectOutputStream outputStream;
+    private final Socket socket;
     //Constructor
-    public SendingHandle(){
-        socket = new Socket();
-        clientMsg = new Message();
-        scanner = new Scanner(System.in);
-    }
-
-    public SendingHandle(Socket socket, Message clientMsg, Scanner scanner) {
-        this.socket = socket;
-        this.clientMsg = clientMsg;
+    public SendingHandle(Scanner scanner, Socket socket, ObjectOutputStream outputStream) {
         this.scanner = scanner;
+        this.socket = socket;
+        this.outputStream = outputStream;
     }
 
     public Message getClientMsg() {
         return clientMsg;
     }
-
     public void setClientMsg(Message clientMsg) {
         this.clientMsg = clientMsg;
     }
@@ -88,22 +77,23 @@ public class SendingHandle implements Runnable{
     @Override
     public void run() {
         System.out.println("******************START******************");
-        System.out.println("\n");
         try {
             // declare output stream with ObjectOutputStream
-            ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
             while (true) {
-                        System.out.println("chose the action:");
-                System.out.println("\n1. REGISTER\n" +
-                        "2. LOGIN\n" +
-                        "3. ECHO\n" +
-                        "4. EXIT");
+                System.out.println("******************MENU******************");
+                System.out.println("""
+                        1: REGISTER
+                        2: LOGIN
+                        3: ECHO
+                        4: EXIT""");
 
                 // loop until a correct selection is made
+                int selector = 0;
                 while (true) {
+                    System.out.println("chose the action:");
 
                     selector = Integer.parseInt(String.valueOf(scanner.nextLine().charAt(0)));
-
+                    System.out.println(selector);
                     if (selector >= 1 && selector <= 4) {
                         break;
                     }
@@ -114,62 +104,51 @@ public class SendingHandle implements Runnable{
                 // if client chose "EXIT", then break the first While and exit program
                 if(selector == 4){
                     System.out.println("****EXIT****");
-                    outputStream.writeUTF("exit");
+                    clientMsg.setMsgType(Type.EXIT);
+                    outputStream.writeObject(clientMsg);
                     outputStream.flush();
+                    socket.close();
+                    scanner.close();
                     break;
                 }
                 switch (selector) {
                     case 1 -> {
                         System.out.println("selected: "+ selector);
-                        clientMsg.setMsgType(Type.REGISTER);
                         while (true) {
+
+                            User user = new User();
+
                             System.out.println("****REGISTER****");
-                            outputStream.writeUTF("register");
-                            outputStream.flush();
                             System.out.println("enter the username and password:");
 
-                            while (true) {
-                                System.out.print("Username: ");
-                                //get input from keyboard
-                                username = scanner.nextLine();
-                                clientMsg.getUser().setUserName(username);
+                            System.out.print("Username: ");
+                            String username = scanner.nextLine();
+                            user.setUserName(username);
 
-                                //send message to server
-                                outputStream.writeObject(clientMsg);
-                                outputStream.flush();
-                                Thread.sleep(1000);
-
-                                //wait for server check whether username is existed or not
-                                if(clientMsg.getMessage().equalsIgnoreCase("Username is existed")){
-                                    System.out.println("reenter Username:");
-                                    continue;
-                                }
-                                break;
-                            }
-                            //if username is available, then enter and check whether is correct or not
+                            // enter and check password
                             while (true) {
                                 System.out.print("enter password: ");
-                                password = scanner.nextLine();
-                                if (!checkPwd(password)){
+                                String password = scanner.nextLine();
+                                if (!checkPwd(password)) {
                                     System.out.println("password contain at least 8 character, " +
                                             "both upper-lowercase and digit");
                                     continue;
                                 }
                                 //if password is passed checking
                                 System.out.println("password create successfully!");
-                                clientMsg.getUser().setPassword(password);
+                                user.setPassword(password);
+                                clientMsg = new Message(Type.REGISTER, user);
+
                                 outputStream.writeObject(clientMsg);
                                 outputStream.flush();
-                                Thread.sleep(1000);
+                                Thread.sleep(500);
                                 break;
                             }
-
-                            // ask client if whether want to register again or not
-//                            if(!isContinued(scanner)){
-//                                System.out.println("Register session closed");
-//                                break;
-//                            }
-//                            System.out.println("re-register");
+                            Scanner scForOption = new Scanner(System.in);
+                            boolean isContinued = isContinued(scForOption);
+                            if(!isContinued){
+                                break;
+                            }
                         }
                     }
                     //end of case 1
@@ -178,16 +157,16 @@ public class SendingHandle implements Runnable{
                         System.out.println("selected: "+ selector);
                         clientMsg.setMsgType(Type.LOGIN);
                         System.out.println("****LOGIN****");
-                        outputStream.writeUTF("login");
+
                         while (true) {
                             System.out.println("enter your username and password:");
 
                             System.out.print("username: ");
-                            username = scanner.nextLine();
+                            String username = scanner.nextLine();
                             clientMsg.getUser().setUserName(username);
 
                             System.out.println("password: ");
-                            password = scanner.nextLine();
+                            String password = scanner.nextLine();
                             clientMsg.getUser().setPassword(password);
 
                             //request to server
@@ -195,38 +174,38 @@ public class SendingHandle implements Runnable{
                             outputStream.flush();
 
                             // wait for response from server
-                            Thread.sleep(1000);
+                            Thread.sleep(500);
 
-                            // if client login successfully, break the while loop
-                            if(clientMsg.getMessage().equalsIgnoreCase("Login successfully")){
+                            boolean isContinued = isContinued(new Scanner(System.in));
+                            if(!isContinued){
                                 break;
                             }
-
                         }
+                        break;
                     }
                     // end of case 2
 
                     case 3 ->{
                         System.out.println("selected: "+ selector);
-                        clientMsg.setMsgType(Type.ECHO);
                         System.out.println("****ECHO****");
-                        outputStream.writeUTF("echo");
+
                         System.out.println("enter \"exit\" to exit");
                         while (true){
                             System.out.println("message: >> ");
-                            message = scanner.nextLine();
-                            clientMsg.setMessage(message);
+                            String message = scanner.nextLine();
+                            clientMsg = new Message(Type.ECHO, message);
 
                             //push to server
                             outputStream.writeObject(clientMsg);
                             outputStream.flush();
-
+                            Thread.sleep(500);
                             // check whether client want to send message again or not
                             if(message.equalsIgnoreCase("exit")){
                                 System.out.println("terminate \"ECHO\" session.");
                                 break;
                             }
                         }
+                        break;
                     }
 
                 }

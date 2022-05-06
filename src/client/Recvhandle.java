@@ -7,33 +7,31 @@ import java.io.ObjectInputStream;
 import java.net.Socket;
 
 public class Recvhandle implements Runnable{
-    Socket socket;
-    Message respMsg = new Message();
+    private final Socket socket;
+    private final ObjectInputStream inputStream;
     // constructor
-    public Recvhandle(Socket socket, Message respMsg) {
+    public Recvhandle(Socket socket, ObjectInputStream inputStream) {
         this.socket = socket;
-        this.respMsg = respMsg;
+        this.inputStream = inputStream;
     }
 
 
     @Override
     public void run() {
-        try {
-            // initialize and receive response Stream from server
-            ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-            while (inputStream.available() > 0) {
-                respMsg = (Message) inputStream.readObject();
+        Message respMsg;
+        while (socket.isConnected()) {
+            try {
+                // initialize and receive response Stream from server
+                    respMsg = (Message) inputStream.readObject();
 
-                System.out.println("Server:>> " + respMsg.getMessage());
+                // show the response from server
+                    System.out.println("Server:>> " + respMsg.getMessage());
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+                break;
+
             }
-            socket.close();
-            inputStream.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
         }
-
 
     }
 }
