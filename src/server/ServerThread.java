@@ -98,12 +98,15 @@ public class ServerThread implements Runnable{
 
                 Type action = message.getMsgType();
                 System.out.println("Client option: " + action);
+
+                // if client want to exit, remove client.
                 if(action == Type.EXIT){
                     System.out.println("client: " + clientSocket.getLocalAddress().toString()
                                         + " exit");
                     message.setMessage("exit");
                     output.writeObject(message);
                     output.flush();
+                    removeInstance();
                 }
                 switch (action){
                     case LOGIN ->{
@@ -128,7 +131,7 @@ public class ServerThread implements Runnable{
                         if(isUserExisted == null){
                             boolean isCreated = createUser(user);
                             if(isCreated){
-                                System.out.println("Initialize use successfully!");
+                                System.out.println("Initialize user successfully!");
                                 message.setMessage("success");
                                 output.writeObject(message);
                                 output.flush();
@@ -172,7 +175,7 @@ public class ServerThread implements Runnable{
             System.err.println("error");
             e.printStackTrace();
         } catch (ClassNotFoundException | SQLException e){
-            System.out.println("errorrr");
+            System.out.println("error");
             e.printStackTrace();
         }
     }

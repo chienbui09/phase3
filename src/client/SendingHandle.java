@@ -215,6 +215,12 @@ public class SendingHandle implements Runnable{
                 // check whether client want to continue or not
                 if(!isContinued(scanner)){
                     System.out.println("EXIT");
+                    clientMsg = new Message(Type.EXIT, "");
+                    outputStream.writeObject(clientMsg);
+                    outputStream.flush();
+                    Thread.sleep(1000);
+//                    socket.close();
+                    scanner.close();
                     break;
                 }
                 System.out.println("continue");
