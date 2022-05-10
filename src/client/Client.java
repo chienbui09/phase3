@@ -29,7 +29,7 @@ public class Client {
             outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
             inputStream = new ObjectInputStream(clientSocket.getInputStream());
 
-            SendingHandle sendingHandle = new SendingHandle(scanner, clientSocket, outputStream);
+            SendingHandle sendingHandle = new SendingHandle(scanner, outputStream);
             Thread sender = new Thread(sendingHandle);
             sender.start();
 

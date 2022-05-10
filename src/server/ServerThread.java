@@ -101,6 +101,9 @@ public class ServerThread implements Runnable{
                 if(action == Type.EXIT){
                     System.out.println("client: " + clientSocket.getLocalAddress().toString()
                                         + " exit");
+                    message.setMessage("exit");
+                    output.writeObject(message);
+                    output.flush();
                 }
                 switch (action){
                     case LOGIN ->{

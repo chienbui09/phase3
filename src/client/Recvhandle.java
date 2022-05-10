@@ -26,6 +26,10 @@ public class Recvhandle implements Runnable{
 
                 // show the response from server
                     System.out.println("Server:>> " + respMsg.getMessage());
+                    if(respMsg.getMessage().equalsIgnoreCase("exit")){
+                        socket.close();
+                        break;
+                    }
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
                 break;

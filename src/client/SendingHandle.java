@@ -14,11 +14,11 @@ public class SendingHandle implements Runnable{
     private Message clientMsg;
     private final Scanner scanner;
     private final ObjectOutputStream outputStream;
-    private final Socket socket;
+//    private final Socket socket;
     //Constructor
-    public SendingHandle(Scanner scanner, Socket socket, ObjectOutputStream outputStream) {
+    public SendingHandle(Scanner scanner, ObjectOutputStream outputStream) {
         this.scanner = scanner;
-        this.socket = socket;
+//        this.socket = socket;
         this.outputStream = outputStream;
     }
 
@@ -93,7 +93,6 @@ public class SendingHandle implements Runnable{
                     System.out.println("chose the action:");
 
                     selector = Integer.parseInt(String.valueOf(scanner.nextLine().charAt(0)));
-                    System.out.println(selector);
                     if (selector >= 1 && selector <= 4) {
                         break;
                     }
@@ -104,10 +103,11 @@ public class SendingHandle implements Runnable{
                 // if client chose "EXIT", then break the first While and exit program
                 if(selector == 4){
                     System.out.println("****EXIT****");
-                    clientMsg.setMsgType(Type.EXIT);
+                    clientMsg = new Message(Type.EXIT, "");
                     outputStream.writeObject(clientMsg);
                     outputStream.flush();
-                    socket.close();
+                    Thread.sleep(1000);
+//                    socket.close();
                     scanner.close();
                     break;
                 }
@@ -155,21 +155,23 @@ public class SendingHandle implements Runnable{
 
                     case 2 -> {
                         System.out.println("selected: "+ selector);
-                        clientMsg.setMsgType(Type.LOGIN);
+//                        clientMsg.setMsgType(Type.LOGIN);
                         System.out.println("****LOGIN****");
 
                         while (true) {
+                            User user = new User();
                             System.out.println("enter your username and password:");
 
                             System.out.print("username: ");
                             String username = scanner.nextLine();
-                            clientMsg.getUser().setUserName(username);
-
-                            System.out.println("password: ");
+//                            clientMsg.getUser().setUserName(username);
+                            user.setUserName(username);
+                            System.out.print("password: ");
                             String password = scanner.nextLine();
-                            clientMsg.getUser().setPassword(password);
-
+//                            clientMsg.getUser().setPassword(password);
+                            user.setPassword(password);
                             //request to server
+                            clientMsg = new Message(Type.LOGIN, user);
                             outputStream.writeObject(clientMsg);
                             outputStream.flush();
 
