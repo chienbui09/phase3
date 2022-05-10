@@ -5,7 +5,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBConnection implements AutoCloseable {
-    private static final String DB_URL = "jdbc:mysql://172.18.0.1:3306/tcp?allowPublicKeyRetrieval=true&useSSL=false";
+//    private static final String DB_URL = "jdbc:mysql://172.18.0.1:3306/tcp?allowPublicKeyRetrieval=true&useSSL=false";
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/tcp?allowPublicKeyRetrieval=true&useSSL=false";
     private static final String USER_NAME = "root";
     private static final String PASSWORD = "12345678";
     private static final String DRIVER = "com.mysql.cj.jdbc.Driver";
@@ -18,11 +19,11 @@ public class DBConnection implements AutoCloseable {
     public static DBConnection getDBHelper() {
         return DBHelper.dbHelper;
     }
-    public static void main(String[] args) {
-        DBConnection dbHelper = DBConnection.getDBHelper();
-        Connection connection = dbHelper.getConnection();
-        System.out.println(connection);
-    }
+//    public static void main(String[] args) {
+//        DBConnection dbHelper = DBConnection.getDBHelper();
+//        Connection connection = dbHelper.getConnection();
+//        System.out.println(connection);
+//    }
     public Connection getConnection() {
         try {
             Class.forName(DRIVER);
