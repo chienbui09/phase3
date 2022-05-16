@@ -6,8 +6,9 @@ import model.User;
 import state.*;
 
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
-public class AuthenticationState implements UserState {
+public class AuthenticationState implements UserState, Serializable {
 
     private User user;
     public AuthenticationState(User user){
@@ -16,7 +17,8 @@ public class AuthenticationState implements UserState {
     @Override
     public boolean wake(ObjectOutputStream outputStream) throws Exception {
         System.out.println("not need! client is waked");
-        outputStream.writeObject(new Message(Type.WAKE, "not available"));
+        outputStream.writeObject(new Message(Type.WAKE, "In "
+                + this.user.getUserState() + " | Not available"));
         return false;
     }
 
@@ -28,14 +30,18 @@ public class AuthenticationState implements UserState {
 
     @Override
     public boolean login(ObjectOutputStream outputStream) throws Exception {
-        outputStream.writeObject(new Message(Type.WAKE, "not available"));
+        outputStream.writeObject(new Message(Type.WAKE, "In "
+                + this.user.getUserState() + " | not available"));
         outputStream.flush();
         return false;
     }
 
     @Override
-    public String echo(ObjectOutputStream outputStream, String message) throws Exception {
-        return handleMsgEcho(message);
+    public void echo(ObjectOutputStream outputStream, String message) throws Exception {
+        message = handleMsgEcho(message);
+        System.out.println("message handled: " + message);
+        outputStream.writeObject(new Message(Type.ECHO, message));
+
 //        outputStream.writeObject();
     }
 
@@ -65,13 +71,13 @@ public class AuthenticationState implements UserState {
 
         msgToHandle = msgToHandle.trim().toLowerCase();
         //remove redundant space
-        msgToHandle = msgToHandle.replaceAll("\\s+","");
+        msgToHandle = msgToHandle.replaceAll("\\s+"," ");
 
         //remove special character
         String regex = "[ ](?=[ ])|[^-_,A-Za-z0-9 ]+";
-        msgToHandle = msgToHandle.replaceAll(regex,"").toUpperCase();
+        msgToHandle = msgToHandle.replaceAll(regex,"");
 
-        String firstLet = msgToHandle.substring(0,1);
+        String firstLet = msgToHandle.substring(0,1).toUpperCase();
         String rem = msgToHandle.substring(1);
         msgToHandle = firstLet.concat(rem);
         return msgToHandle;

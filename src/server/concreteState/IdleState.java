@@ -108,10 +108,9 @@ public class IdleState implements UserState, Serializable {
     }
 
     @Override
-    public String  echo(ObjectOutputStream outputStream, String message) throws Exception {
+    public void  echo(ObjectOutputStream outputStream, String message) throws Exception {
         System.out.println("user is in idle state");
-        outputStream.writeObject(new Message(Type.ECHO, "not available"));
-        return null;
+        outputStream.writeObject(new Message(Type.ECHO, "not available"));;
     }
 
     @Override

@@ -87,11 +87,11 @@ public class User implements Serializable {
         this.userState = userState;
     }
 
-    public boolean wake(ObjectOutputStream outputStream) throws Exception {
-        return this.userState.wake(outputStream);
+    public void wake(ObjectOutputStream outputStream) throws Exception {
+        this.userState.wake(outputStream);
     }
-    public boolean sleep(ObjectOutputStream outputStream) throws Exception {
-        return this.userState.sleep(outputStream);
+    public void sleep(ObjectOutputStream outputStream) throws Exception {
+        this.userState.sleep(outputStream);
     }
     public boolean login(ObjectOutputStream outputStream) throws Exception {
         return this.userState.login(outputStream);
@@ -102,9 +102,8 @@ public class User implements Serializable {
     public boolean register(ObjectOutputStream outputStream) throws Exception {
         return this.userState.register(outputStream);
     }
-    public String echo(ObjectOutputStream outputStream, String message) throws Exception {
+    public void echo(ObjectOutputStream outputStream, String message) throws Exception {
         userState.echo(outputStream, message);
-        return null;
     }
     public boolean broadcast(ObjectOutputStream outputStream) throws Exception {
         return this.userState.broadcast(outputStream);

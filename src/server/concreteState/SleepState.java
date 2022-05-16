@@ -6,8 +6,9 @@ import model.User;
 import state.UserState;
 
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
-public class SleepState implements UserState {
+public class SleepState implements UserState, Serializable {
 
     private User user;
 
@@ -40,11 +41,10 @@ public class SleepState implements UserState {
     }
 
     @Override
-    public String echo(ObjectOutputStream outputStream, String message) throws Exception {
+    public void echo(ObjectOutputStream outputStream, String message) throws Exception {
         System.out.println("user is in sleep state");
         outputStream.writeObject(new Message(Type.ECHO,"not available"));
         outputStream.flush();
-        return null;
     }
 
     @Override

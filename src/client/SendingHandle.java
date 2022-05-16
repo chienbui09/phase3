@@ -25,9 +25,6 @@ public class SendingHandle implements Runnable{
     public Message getClientMsg() {
         return clientMsg;
     }
-    public void setClientMsg(Message clientMsg) {
-        this.clientMsg = clientMsg;
-    }
 
     // a method to get input from keyboard
     public String getMessage(Scanner scanner){
@@ -76,7 +73,7 @@ public class SendingHandle implements Runnable{
 
     @Override
     public void run() {
-        System.out.println("******************START******************");
+        System.out.println("***START***");
         try {
             // declare output stream with ObjectOutputStream
             while (true) {
@@ -108,7 +105,7 @@ public class SendingHandle implements Runnable{
 
                 // if client chose "EXIT", then break the first While and exit program
                 if(selector == 10){
-                    System.out.println("****EXIT****");
+                    System.out.println("----EXIT----");
                     clientMsg = new Message(Type.EXIT, "");
                     outputStream.writeObject(clientMsg);
                     outputStream.flush();
@@ -119,12 +116,12 @@ public class SendingHandle implements Runnable{
                 }
                 switch (selector) {
                     case 1 -> {
-                        System.out.println("selected: "+ selector);
+//                        System.out.println("selected: "+ selector);
                         while (true) {
 
                             User user = new User();
 
-                            System.out.println("****REGISTER****");
+                            System.out.println("----REGISTER----");
                             System.out.println("enter the username and password:");
 
                             System.out.print("Username: ");
@@ -150,32 +147,29 @@ public class SendingHandle implements Runnable{
                                 Thread.sleep(500);
                                 break;
                             }
-                            Scanner scForOption = new Scanner(System.in);
-                            boolean isContinued = isContinued(scForOption);
-                            if(!isContinued){
-                                break;
-                            }
+//                            Scanner scForOption = new Scanner(System.in);
+//                            boolean isContinued = isContinued(scForOption);
+//                            if(!isContinued){
+//                                break;
+//                            }
                         }
                     }
                     //end of case 1
 
                     case 2 -> {
-                        System.out.println("selected: "+ selector);
-//                        clientMsg.setMsgType(Type.LOGIN);
-                        System.out.println("****LOGIN****");
+                        System.out.println("----LOGIN----");
 
-                        while (true) {
+//                        while (true) {
                             User user = new User();
                             System.out.println("enter your username and password:");
 
                             System.out.print("username: ");
                             String username = scanner.nextLine();
-//                            clientMsg.getUser().setUserName(username);
                             user.setUserName(username);
                             System.out.print("password: ");
                             String password = scanner.nextLine();
-//                            clientMsg.getUser().setPassword(password);
                             user.setPassword(password);
+
                             //request to server
                             clientMsg = new Message(Type.LOGIN, user);
                             outputStream.writeObject(clientMsg);
@@ -184,22 +178,21 @@ public class SendingHandle implements Runnable{
                             // wait for response from server
                             Thread.sleep(500);
 
-                            boolean isContinued = isContinued(new Scanner(System.in));
-                            if(!isContinued){
-                                break;
-                            }
-                        }
-                        break;
+//                            boolean isContinued = isContinued(new Scanner(System.in));
+//                            if(!isContinued){
+//                                break;
+//                            }
+//                        }
                     }
                     // end of case 2
 
                     case 3 ->{
                         System.out.println("****ECHO****");
 
-                        System.out.println("enter \"exit\" to exit");
+                        System.out.println("0: back");
                         while (true){
-                            System.out.println("message: >> ");
-                            String message = scanner.nextLine();
+//                            System.out.println("message: >> ");
+                            String message = getMessage(scanner);
                             clientMsg = new Message(Type.ECHO, message);
 
                             //push to server
@@ -207,7 +200,7 @@ public class SendingHandle implements Runnable{
                             outputStream.flush();
                             Thread.sleep(500);
                             // check whether client want to send message again or not
-                            if(message.equalsIgnoreCase("exit")){
+                            if(message.equalsIgnoreCase("0")){
                                 System.out.println("terminate \"ECHO\" session.");
                                 break;
                             }
@@ -215,10 +208,10 @@ public class SendingHandle implements Runnable{
                         break;
                     }
                     case 4 ->{
-                        System.out.println("****BROADCAST****");
+                        System.out.println("----BROADCAST----");
                         System.out.println("1: back");
-                        Scanner sc1 = new Scanner(System.in);
-                        String broadcastMessage = sc1.nextLine();
+//                        Scanner sc1 = new Scanner(System.in);
+                        String broadcastMessage = getMessage(scanner);
 
                         if (broadcastMessage.equals("")) {
                             continue;
@@ -233,7 +226,7 @@ public class SendingHandle implements Runnable{
                         break;
                     }
                     case 5 ->{
-                        System.out.println("****SLEEP****");
+                        System.out.println("----SLEEP----");
                         outputStream.writeObject(new Message(Type.SLEEP,"change to sleep state"));
                         outputStream.flush();
                         Thread.sleep(500);
@@ -241,7 +234,7 @@ public class SendingHandle implements Runnable{
                     }
 
                     case 6 ->{
-                        System.out.println("****WAKE****");
+                        System.out.println("----WAKE----");
                         outputStream.writeObject(new Message(Type.WAKE, "wake up the client"));
                         outputStream.flush();
                         Thread.sleep(500);
@@ -249,19 +242,19 @@ public class SendingHandle implements Runnable{
                     }
 
                     case 7 ->{
-                        System.out.println("****LOGOUT****");
+                        System.out.println("----LOGOUT----");
                         outputStream.writeObject(new Message(Type.LOGOUT,"logout"));
                         outputStream.flush();
                         Thread.sleep(500);
                         break;
                     }
                     case 8 ->{
-                        System.out.println("****SUBSCRIBE****");
+                        System.out.println("----SUBSCRIBE----");
 
                         break;
                     }
                     case 9 ->{
-                        System.out.println("****HOT****");
+                        System.out.println("----HOT----");
 
                         break;
                     }
