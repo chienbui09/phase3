@@ -80,12 +80,18 @@ public class SendingHandle implements Runnable{
         try {
             // declare output stream with ObjectOutputStream
             while (true) {
-                System.out.println("******************MENU******************");
+                System.out.println("***MENU***");
                 System.out.println("""
                         1: REGISTER
                         2: LOGIN
                         3: ECHO
-                        4: EXIT""");
+                        4: BROADCAST
+                        5: SLEEP
+                        6: WAKE
+                        7: LOGOUT
+                        8: SUBSCRIBE
+                        9: HOT
+                        10: EXIT""");
 
                 // loop until a correct selection is made
                 int selector = 0;
@@ -93,15 +99,15 @@ public class SendingHandle implements Runnable{
                     System.out.println("chose the action:");
 
                     selector = Integer.parseInt(String.valueOf(scanner.nextLine().charAt(0)));
-                    if (selector >= 1 && selector <= 4) {
+                    if (selector >= 1 && selector <= 10) {
                         break;
                     }
                     // otherwise, repeat the loop
-                    System.out.println("entered number is greater than 1 and smaller than or equal 4");
+                    System.out.println("entered number is greater than 1 and smaller than or equal 10");
                 }
 
                 // if client chose "EXIT", then break the first While and exit program
-                if(selector == 4){
+                if(selector == 10){
                     System.out.println("****EXIT****");
                     clientMsg = new Message(Type.EXIT, "");
                     outputStream.writeObject(clientMsg);
@@ -188,7 +194,6 @@ public class SendingHandle implements Runnable{
                     // end of case 2
 
                     case 3 ->{
-                        System.out.println("selected: "+ selector);
                         System.out.println("****ECHO****");
 
                         System.out.println("enter \"exit\" to exit");
@@ -207,6 +212,57 @@ public class SendingHandle implements Runnable{
                                 break;
                             }
                         }
+                        break;
+                    }
+                    case 4 ->{
+                        System.out.println("****BROADCAST****");
+                        System.out.println("1: back");
+                        Scanner sc1 = new Scanner(System.in);
+                        String broadcastMessage = sc1.nextLine();
+
+                        if (broadcastMessage.equals("")) {
+                            continue;
+                        }
+                        if (broadcastMessage.equalsIgnoreCase("1")) {
+                            break;
+                        }
+
+                        outputStream.writeObject(new Message(Type.BROADCAST, broadcastMessage));
+                        outputStream.flush();
+                        Thread.sleep(500);
+                        break;
+                    }
+                    case 5 ->{
+                        System.out.println("****SLEEP****");
+                        outputStream.writeObject(new Message(Type.SLEEP,"change to sleep state"));
+                        outputStream.flush();
+                        Thread.sleep(500);
+                        break;
+                    }
+
+                    case 6 ->{
+                        System.out.println("****WAKE****");
+                        outputStream.writeObject(new Message(Type.WAKE, "wake up the client"));
+                        outputStream.flush();
+                        Thread.sleep(500);
+                        break;
+                    }
+
+                    case 7 ->{
+                        System.out.println("****LOGOUT****");
+                        outputStream.writeObject(new Message(Type.LOGOUT,"logout"));
+                        outputStream.flush();
+                        Thread.sleep(500);
+                        break;
+                    }
+                    case 8 ->{
+                        System.out.println("****SUBSCRIBE****");
+
+                        break;
+                    }
+                    case 9 ->{
+                        System.out.println("****HOT****");
+
                         break;
                     }
 
@@ -230,6 +286,5 @@ public class SendingHandle implements Runnable{
             e.printStackTrace();
         }
     }
-
 
 }

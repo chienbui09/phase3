@@ -1,4 +1,4 @@
-package server;
+package server.server;
 
 import database.DBConnection;
 import model.Message;
@@ -12,7 +12,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.regex.Pattern;
 
 public class ServerThread implements Runnable{
     public static final String USER_CREATE = "INSERT INTO user (name, password) VALUES (?, ?);";
