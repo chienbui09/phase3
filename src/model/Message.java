@@ -6,19 +6,17 @@ public class Message implements Serializable {
 
     private Type msgType;
     private User user;
+    private HotType topic;
     String message;
 
     // user have flags which mark the statement of message handled sucessfully or not
-    private boolean connected;
-    private boolean registed;
-    private boolean logedin;
 
     //constructor
     public Message(){
         this.user = new User();
-        this.connected = false;
-        this.logedin = false;
-        this.registed = false;
+        this.msgType = null;
+        this.message = "";
+        this.topic = null;
     }
     public Message (Type msgType, User user){
         this.user = user;
@@ -29,7 +27,17 @@ public class Message implements Serializable {
         this.message = message;
     }
 
-    //Getter & Setter
+    public Message(Type msgType, HotType topic) {
+        this.msgType = msgType;
+        this.topic = topic;
+    }
+
+    public Message(Type msgType, HotType topic, String message) {
+        this.msgType = msgType;
+        this.topic = topic;
+        this.message = message;
+    }
+//Getter & Setter
 
     public Type getMsgType() {
         return msgType;
@@ -55,4 +63,11 @@ public class Message implements Serializable {
         this.message = message;
     }
 
+    public HotType getTopic() {
+        return topic;
+    }
+
+    public void setTopic(HotType topic) {
+        this.topic = topic;
+    }
 }

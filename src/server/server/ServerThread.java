@@ -1,22 +1,20 @@
 package server.server;
 
-import database.DBConnection;
+import model.HotType;
 import model.Message;
 import model.Type;
 import model.User;
 import server.concreteState.AuthenticationState;
 import server.concreteState.IdleState;
-import server.concreteState.SleepState;
+import server.observer.Listener;
+import server.publisher.ConcreteSubject;
 
 import java.io.*;
 import java.net.Socket;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-public class ServerThread implements Runnable{
+public class ServerThread implements Runnable, Listener {
     private static final ArrayList<ServerThread> instances = new ArrayList<>();
     private static final ArrayList<ServerThread> totalConnected = new ArrayList<>();
     private static final ArrayList<ServerThread> totalAuthenticated = new ArrayList<>();
@@ -27,6 +25,7 @@ public class ServerThread implements Runnable{
     private final ObjectInputStream input;
     private final ObjectOutputStream output;
     private User user;
+    private ConcreteSubject subject;
 
     public ServerThread(Socket accept) throws IOException {
         this.clientSocket = accept;
@@ -34,6 +33,7 @@ public class ServerThread implements Runnable{
         this.input = new ObjectInputStream(accept.getInputStream());
         this.output = new ObjectOutputStream(accept.getOutputStream());
         this.addInstance();
+        this.subject = new ConcreteSubject();
         addInstanceTotalConnected();
         addInstanceTotalIdle();
     }
@@ -47,7 +47,7 @@ public class ServerThread implements Runnable{
 //        return msgToHandle;
 //    }
 
-    private synchronized void update(String message){
+    public synchronized void update(String message){
     try{
         if (user.getUserState() instanceof AuthenticationState){
             message = "\n----New message from your subscribed topic----\nContent: " + message;
@@ -61,6 +61,9 @@ public class ServerThread implements Runnable{
     }
     }
 
+    private synchronized boolean addSubscriber(HotType topic){
+        return subject.addSubscriber(topic, this);
+    }
     private synchronized void addInstance(){
         totalAuthenticated.add(this);
     }
@@ -93,7 +96,7 @@ public class ServerThread implements Runnable{
     }
     private synchronized void printConnectedClient(){
         int counter =0;
-        for (ServerThread igonre : totalConnected){
+        for (ServerThread ignore : totalConnected){
             counter++;
         }
         if(counter == 1){
@@ -125,49 +128,19 @@ public class ServerThread implements Runnable{
         output.writeObject(new Message(Type.BROADCAST, "Broadcast to " + counter + " active clients successful!."));
         output.flush();
     }
+    public void broadcastToHotTopic(){
 
+    }
 
-//    private synchronized User checkLogin(User user) throws SQLException{
-//        try(DBConnection dbHelper  = DBConnection.getDBHelper();
-//            Connection connection = dbHelper.getConnection();
-//        PreparedStatement statement = connection.prepareStatement(USER_LOGIN)){
-//            statement.setString(1, user.getUserName());
-//            statement.setString(2, user.getPassword());
-//            ResultSet results = statement.executeQuery();
-//            User existedUser = null;
-//            if(results.next()){
-//                existedUser = new User();
-//                existedUser.setUserName(results.getString("name"));
-//            }
-//            return existedUser;
-//        }
-//    }
-//    private synchronized Boolean createUser(User user) throws SQLException {
-//        boolean rowUpdated = false;
-//        try (DBConnection dbHelper = DBConnection.getDBHelper();
-//             Connection connection = dbHelper.getConnection();
-//             PreparedStatement statement = connection.prepareStatement(USER_CREATE)) {
-//            statement.setString(1, user.getUserName());
-//            statement.setString(2, user.getPassword());
-//            rowUpdated = statement.executeUpdate() > 0;
-//
-//            return rowUpdated;
-//        }
-//    }
-//    private synchronized User isUserExisted(User user) throws SQLException {
-//        User existedUser = null;
-//        try (DBConnection dbHelper = DBConnection.getDBHelper();
-//             Connection connection = dbHelper.getConnection();
-//             PreparedStatement statement = connection.prepareStatement(GET_USER_BY_USERNAME)) {
-//            statement.setString(1, user.getUserName());
-//            ResultSet results = statement.executeQuery();
-//            if (results.next()){
-//                existedUser = new User();
-//                existedUser.setUserName(results.getString("name"));
-//            }
-//            return existedUser;
-//        }
-//    }
+    public void printTopic(ObjectOutputStream outputStream) throws IOException {
+        StringBuffer topic = new StringBuffer();
+        topic.append("----Topic----\n");
+        topic.append("1: GRADUATED\n");
+        topic.append("2: NOT GRADUATED");
+        outputStream.writeObject(new Message(Type.SUBSCRIBE, String.valueOf(topic)));
+        outputStream.flush();
+    }
+
     @Override
     public void run() {
         printConnectedClient();
@@ -199,7 +172,8 @@ public class ServerThread implements Runnable{
                             boolean isLoginSuccess = userToLogin.login(output);
                             if (isLoginSuccess) {
                                 System.out.println("Login success!");
-                                this.user = userToLogin;
+                                this.user.setUserName(userToLogin.getUserName());
+                                this.user.setPassword(userToLogin.getPassword());
                                 this.user.setUserState(this.user.getAuthenticationState());
 
                                 //add user to authen users list
@@ -285,11 +259,47 @@ public class ServerThread implements Runnable{
                         break;
                     }
                     case LOGOUT -> {
+
                         this.user.logout(output);
                         this.user.setUserState(this.user.getIdleState());
                         removeInstanceAuthenNotSleeping();
                         addInstanceTotalIdle();
                         printState();
+                        break;
+                    }
+                    case SUBSCRIBE -> {
+                        boolean isAllowAction = this.user.broadcast(output);
+                        boolean isSuccess = false;
+                        HotType topic = message.getTopic();
+
+                        if(isAllowAction){
+                            isSuccess = addSubscriber(topic);
+                            if(isSuccess){
+                                output.writeObject(new Message(Type.SUBSCRIBE, "success to subscribe"));
+                            }else {
+                                output.writeObject(new Message(Type.SUBSCRIBE, "failed to subscribe"));
+                            }
+                            output.flush();
+                        }else {
+                            output.writeObject(new Message(Type.SUBSCRIBE, "failed to subscribe"));
+                            output.flush();
+                        }
+
+                        break;
+                    }
+                    case HOT -> {
+                        boolean isAllowAction = this.user.broadcast(output);
+                        HotType topic = message.getTopic();
+
+                        if(isAllowAction){
+                            System.out.println("public from: " + this.user.getUserName());
+                            System.out.println("message: " + message.getMessage());
+                            subject.setMessageContext(topic, message.getMessage());
+                            output.writeObject(new Message(Type.HOT, "success to public"));
+                        } else {
+                            output.writeObject(new Message(Type.HOT, "not allowed"));
+                            output.flush();
+                        }
                         break;
                     }
                 }

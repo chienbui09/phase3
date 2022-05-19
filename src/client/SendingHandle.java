@@ -1,9 +1,11 @@
 package client;
 
+import model.HotType;
 import model.Message;
 import model.Type;
 import model.User;
 
+import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Scanner;
@@ -14,9 +16,11 @@ public class SendingHandle implements Runnable{
     private Message clientMsg;
     private final Scanner scanner;
     private final ObjectOutputStream outputStream;
+//    private HotType subscribedTopic;
 //    private final Socket socket;
     //Constructor
     public SendingHandle(Scanner scanner, ObjectOutputStream outputStream) {
+        this.clientMsg = new Message();
         this.scanner = scanner;
 //        this.socket = socket;
         this.outputStream = outputStream;
@@ -28,7 +32,7 @@ public class SendingHandle implements Runnable{
 
     // a method to get input from keyboard
     public String getMessage(Scanner scanner){
-        System.out.println("message:>> ");
+        System.out.print("message:>> ");
         return scanner.nextLine();
     }
 
@@ -70,6 +74,24 @@ public class SendingHandle implements Runnable{
 
         return matcher.matches();
     }
+    public int topicOption(Scanner scanner) throws IOException {
+        System.out.println("---- title ----");
+        System.out.println("""
+                1. GRADUATED
+                2. NOT GRADUATED
+                """);
+        int action = 0;
+        do{
+            action = Integer.parseInt(String.valueOf(scanner.nextLine().charAt(0)));
+            if(action == 1 || action == 2){
+                break;
+            }
+            else {
+                System.out.println("Not available number.");
+            }
+        } while (true);
+            return action;
+    }
 
     @Override
     public void run() {
@@ -93,9 +115,10 @@ public class SendingHandle implements Runnable{
                 // loop until a correct selection is made
                 int selector = 0;
                 while (true) {
-                    System.out.println("chose the action:");
+                    System.out.print("chose the action: ");
 
-                    selector = Integer.parseInt(String.valueOf(scanner.nextLine().charAt(0)));
+                    selector = scanner.nextInt();
+                    scanner.nextLine();
                     if (selector >= 1 && selector <= 10) {
                         break;
                     }
@@ -174,6 +197,7 @@ public class SendingHandle implements Runnable{
                             clientMsg = new Message(Type.LOGIN, user);
                             outputStream.writeObject(clientMsg);
                             outputStream.flush();
+                        System.out.println("test user: " + clientMsg.getUser().getUserName());
 
                             // wait for response from server
                             Thread.sleep(500);
@@ -188,7 +212,7 @@ public class SendingHandle implements Runnable{
 
                     case 3 ->{
                         System.out.println("****ECHO****");
-
+                        clientMsg.setMsgType(Type.ECHO);
                         System.out.println("0: back");
                         while (true){
 //                            System.out.println("message: >> ");
@@ -210,6 +234,7 @@ public class SendingHandle implements Runnable{
                     case 4 ->{
                         System.out.println("----BROADCAST----");
                         System.out.println("1: back");
+                        clientMsg.setMsgType(Type.BROADCAST);
 //                        Scanner sc1 = new Scanner(System.in);
                         String broadcastMessage = getMessage(scanner);
 
@@ -227,6 +252,7 @@ public class SendingHandle implements Runnable{
                     }
                     case 5 ->{
                         System.out.println("----SLEEP----");
+                        clientMsg.setMsgType(Type.SLEEP);
                         outputStream.writeObject(new Message(Type.SLEEP,"change to sleep state"));
                         outputStream.flush();
                         Thread.sleep(500);
@@ -235,6 +261,7 @@ public class SendingHandle implements Runnable{
 
                     case 6 ->{
                         System.out.println("----WAKE----");
+                        clientMsg.setMsgType(Type.WAKE);
                         outputStream.writeObject(new Message(Type.WAKE, "wake up the client"));
                         outputStream.flush();
                         Thread.sleep(500);
@@ -243,6 +270,7 @@ public class SendingHandle implements Runnable{
 
                     case 7 ->{
                         System.out.println("----LOGOUT----");
+                        clientMsg.setMsgType(Type.LOGOUT);
                         outputStream.writeObject(new Message(Type.LOGOUT,"logout"));
                         outputStream.flush();
                         Thread.sleep(500);
@@ -250,12 +278,35 @@ public class SendingHandle implements Runnable{
                     }
                     case 8 ->{
                         System.out.println("----SUBSCRIBE----");
+                        selector = topicOption(scanner);
+                        HotType topic;
 
+                        clientMsg.setMsgType(Type.SUBSCRIBE);
+
+                        if(selector == 1){
+                            topic = HotType.GRADUATED;
+                            clientMsg.setTopic(HotType.GRADUATED);
+                        } else {
+                            topic = HotType.NOT_GRADUATED;
+                            clientMsg.setTopic(HotType.NOT_GRADUATED);
+                        }
+                        outputStream.writeObject(new Message(Type.SUBSCRIBE,topic));
+//                        outputStream.writeObject(new Message(Type.SUBSCRIBE, clientMsg.getTopic()));
+                        outputStream.flush();
+                        Thread.sleep(500);
+//
                         break;
                     }
                     case 9 ->{
                         System.out.println("----HOT----");
-
+                        System.out.println("Subscribed topic: " +
+                                            clientMsg.getTopic().toString());
+//                        clientMsg.setMsgType(Type.HOT);
+//                        clientMsg.setMessage(getMessage(scanner));
+//                        outputStream.writeObject(clientMsg);
+                        outputStream.writeObject(new Message(Type.HOT, clientMsg.getTopic(), getMessage(scanner)));
+                        outputStream.flush();
+                        Thread.sleep(500);
                         break;
                     }
 
