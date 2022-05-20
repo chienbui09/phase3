@@ -38,7 +38,7 @@ public class SendingHandle implements Runnable{
 
     // A method return client option, is continued or not?
     public boolean isContinued(Scanner scanner){
-        System.out.println("Do you want to contitnue?\nY/N");
+        System.out.println("Do you want to continue?\nY/N");
         String option = scanner.nextLine();
         if(option.equalsIgnoreCase("Y")){
             return true;
@@ -197,7 +197,6 @@ public class SendingHandle implements Runnable{
                             clientMsg = new Message(Type.LOGIN, user);
                             outputStream.writeObject(clientMsg);
                             outputStream.flush();
-                        System.out.println("test user: " + clientMsg.getUser().getUserName());
 
                             // wait for response from server
                             Thread.sleep(500);

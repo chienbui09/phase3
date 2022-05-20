@@ -47,7 +47,7 @@ public class ConcreteSubject implements Subject{
                                     this.getTopic() +
                                         "topic.");
         for(Listener user : subscribers){
-            if(!user.equals(this)) {
+            if(user.hashCode() != this.hashCode()) {
                 user.update(this.getMessage());
             }
         }

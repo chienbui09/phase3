@@ -1,5 +1,6 @@
 package server.server;
 
+import server.publisher.ConcreteSubject;
 import server.server.ServerThread;
 
 import java.io.IOException;
@@ -12,12 +13,13 @@ public class ServerWorker implements Runnable{
 
     private ServerSocket listener;
     private ExecutorService executorService;
+    private ConcreteSubject subject;
 
     public static final int NUM_OF_THREAD = 5;
     public static final int SERVER_PORT = 25000;
 
     public ServerWorker(){
-
+        this.subject = new ConcreteSubject();
     }
 
     @Override
@@ -32,7 +34,7 @@ public class ServerWorker implements Runnable{
             while (true){
                 Socket socket = listener.accept();
                 System.out.println("connected: " + socket.getInetAddress());
-                executorService.execute(new ServerThread(socket));
+                executorService.execute(new ServerThread(socket, subject));
             }
         } catch (IOException e) {
             System.err.println("cant bind to port\nport is in use!");

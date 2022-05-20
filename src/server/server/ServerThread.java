@@ -15,7 +15,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class ServerThread implements Runnable, Listener {
-    private static final ArrayList<ServerThread> instances = new ArrayList<>();
+//    private static final ArrayList<ServerThread> instances = new ArrayList<>();
     private static final ArrayList<ServerThread> totalConnected = new ArrayList<>();
     private static final ArrayList<ServerThread> totalAuthenticated = new ArrayList<>();
     private static final ArrayList<ServerThread> totalAuthenticatedNotSleeping = new ArrayList<>();
@@ -27,13 +27,12 @@ public class ServerThread implements Runnable, Listener {
     private User user;
     private ConcreteSubject subject;
 
-    public ServerThread(Socket accept) throws IOException {
+    public ServerThread(Socket accept, ConcreteSubject subject) throws IOException {
         this.clientSocket = accept;
         this.user = new User();
         this.input = new ObjectInputStream(accept.getInputStream());
         this.output = new ObjectOutputStream(accept.getOutputStream());
-        this.addInstance();
-        this.subject = new ConcreteSubject();
+        this.subject = subject;
         addInstanceTotalConnected();
         addInstanceTotalIdle();
     }
@@ -162,7 +161,9 @@ public class ServerThread implements Runnable, Listener {
                     output.writeObject(message);
                     output.flush();
                     removeInstance();
+                    removeInstanceTotalConnected();
                     clientSocket.close();
+
                     break;
                 }
                 switch (action){
